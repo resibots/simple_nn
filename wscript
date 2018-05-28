@@ -15,14 +15,14 @@ blddir = 'build'
 from waflib.Build import BuildContext
 from waflib import Logs
 from waflib.Tools import waf_unit_test
-# import boost
+import boost
 import eigen
 
 
 def options(opt):
     opt.load('compiler_cxx')
     opt.load('compiler_c')
-    # opt.load('boost')
+    opt.load('boost')
     opt.load('eigen')
 
     opt.add_option('--tests', action='store_true', help='compile tests or not', dest='tests')
@@ -32,10 +32,10 @@ def configure(conf):
     conf.load('compiler_cxx')
     conf.load('compiler_c')
     conf.load('waf_unit_test')
-    # conf.load('boost')
+    conf.load('boost')
     conf.load('eigen')
 
-    # conf.check_boost(lib='regex system filesystem unit_test_framework', min_version='1.46')
+    conf.check_boost(lib='unit_test_framework')
     conf.check_eigen(required=True)
 
     if conf.env.CXX_NAME in ["icc", "icpc"]:

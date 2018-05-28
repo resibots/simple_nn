@@ -1,0 +1,10 @@
+def build(bld):
+    libs = 'BOOST EIGEN'
+    cxxflags = bld.get_env()['CXXFLAGS']
+
+    bld.program(features='cxx test',
+                source='test_nn.cpp',
+                includes='..',
+                target='test_nn',
+                uselib=libs,
+                cxxflags = cxxflags)
