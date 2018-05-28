@@ -28,7 +28,7 @@ int main()
     // Let's create our neural network
     simple_nn::NeuralNet network;
     // 1 hidden layer with 20 unites and sigmoid activation function
-    network.add_layer<simple_nn::SigmoidLayer>(1, 20);
+    network.add_layer<simple_nn::TanhLayer>(1, 20);
     // 1 output layer with sigmoid activation function
     network.add_layer<simple_nn::TanhLayer>(20, 1);
 
