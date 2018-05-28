@@ -20,8 +20,8 @@ int main()
 {
     std::srand(std::time(NULL));
     // simple 1D regression
-    // generate 50 random data in [-1,1]
-    Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 100);
+    // generate 50 random data in [-5,5]
+    Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 200).array() * 5.;
     // function is linear combination
     Eigen::MatrixXd output = input.array().cos();
 
@@ -30,7 +30,7 @@ int main()
     // 1 hidden layer with 20 unites and sigmoid activation function
     network.add_layer<simple_nn::SigmoidLayer>(1, 20);
     // 1 output layer with sigmoid activation function
-    network.add_layer<simple_nn::SigmoidLayer>(20, 1);
+    network.add_layer<simple_nn::TanhLayer>(20, 1);
 
     // Random initial weights
     Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());

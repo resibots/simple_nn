@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(test_gradients)
 
     network.add_layer<simple_nn::SigmoidLayer>(5, 20);
     network.add_layer<simple_nn::FullyConnectedLayer>(20, 2);
-    network.add_layer<simple_nn::SigmoidLayer>(2, 20);
+    network.add_layer<simple_nn::TanhLayer>(2, 20);
     network.add_layer<simple_nn::SigmoidLayer>(20, 2);
 
     int N = 50;
