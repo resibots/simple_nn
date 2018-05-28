@@ -7,10 +7,10 @@
 
 // Check gradient via finite differences method
 template <typename NeuralNet>
-std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> check_grad(NeuralNet& net, const Eigen::MatrixXd& x, const Eigen::MatrixXd& y, const Eigen::VectorXd& theta, double e = 1e-4)
+std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> check_grad(const NeuralNet& net, const Eigen::MatrixXd& x, const Eigen::MatrixXd& y, const Eigen::VectorXd& theta, double e = 1e-4)
 {
     Eigen::VectorXd analytic_result, finite_diff_result;
-    NeuralNet test_net = std::move(net);
+    NeuralNet test_net = net;
     test_net.set_weights(theta);
 
     analytic_result = test_net.backward(x, y);
@@ -47,21 +47,22 @@ std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> check_grad(NeuralNet& net, 
 int main()
 {
     std::srand(std::time(NULL));
-    // simple_nn::NeuralNet network;
 
-    // std::unique_ptr<simple_nn::Layer> sigmoid_layer = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(5, 3));
-    // std::unique_ptr<simple_nn::Layer> hidden_layer = std::unique_ptr<simple_nn::FullyConnectedLayer>(new simple_nn::FullyConnectedLayer(3, 2));
-    // // std::unique_ptr<simple_nn::Layer> hidden_layer = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(3, 2));
+    simple_nn::NeuralNet network;
 
-    // // network.add_layer(input_layer);
+    // std::unique_ptr<simple_nn::Layer> sigmoid_layer = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(5, 20));
+    // std::unique_ptr<simple_nn::Layer> hidden_layer = std::unique_ptr<simple_nn::FullyConnectedLayer>(new simple_nn::FullyConnectedLayer(20, 2));
+    // std::unique_ptr<simple_nn::Layer> sigmoid_layer2 = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(2, 20));
+    // std::unique_ptr<simple_nn::Layer> sigmoid_layer3 = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(20, 2));
+
     // network.add_layer(sigmoid_layer);
     // network.add_layer(hidden_layer);
-
-    // Eigen::MatrixXd input = Eigen::MatrixXd::Ones(5, 20);
-    // Eigen::MatrixXd output = Eigen::MatrixXd::Ones(2, 20);
-
-    // network.forward(input);
-    // // Eigen::VectorXd grads = network.backward(input, output);
+    // network.add_layer(sigmoid_layer2);
+    // network.add_layer(sigmoid_layer3);
+    network.add_layer<simple_nn::SigmoidLayer>(5, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer>(20, 2);
+    network.add_layer<simple_nn::SigmoidLayer>(2, 20);
+    network.add_layer<simple_nn::SigmoidLayer>(20, 2);
 
     for (int i = 0; i < 10; i++) {
         Eigen::MatrixXd input = Eigen::MatrixXd::Random(5, 20).array() * 10.;
@@ -71,17 +72,6 @@ int main()
         // std::cout << output << std::endl;
         // std::cout << input << " --> " << output << std::endl;
 
-        simple_nn::NeuralNet network;
-
-        std::unique_ptr<simple_nn::Layer> sigmoid_layer = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(5, 20));
-        std::unique_ptr<simple_nn::Layer> hidden_layer = std::unique_ptr<simple_nn::FullyConnectedLayer>(new simple_nn::FullyConnectedLayer(20, 2));
-        std::unique_ptr<simple_nn::Layer> sigmoid_layer2 = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(2, 20));
-        std::unique_ptr<simple_nn::Layer> sigmoid_layer3 = std::unique_ptr<simple_nn::SigmoidLayer>(new simple_nn::SigmoidLayer(20, 2));
-
-        network.add_layer(sigmoid_layer);
-        network.add_layer(hidden_layer);
-        network.add_layer(sigmoid_layer2);
-        network.add_layer(sigmoid_layer3);
         Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights()); //limbo::tools::random_vector(network.num_weights()).array() * 2. - 1.;
         // std::cout << theta.transpose() << std::endl;
 

@@ -14,15 +14,29 @@
 namespace simple_nn {
 
     struct NeuralNet {
-        void add_layer(std::unique_ptr<Layer>& layer)
+    public:
+        NeuralNet() {}
+
+        NeuralNet(const NeuralNet& other)
         {
+            _layers.resize(other._layers.size());
+
+            for (size_t i = 0; i < _layers.size(); i++) {
+                _layers[i] = other._layers[i]->clone();
+            }
+        }
+
+        template <typename LayerType, typename... Args>
+        void add_layer(Args&&... args)
+        {
+            std::shared_ptr<LayerType> layer = std::make_shared<LayerType>(std::forward<Args>(args)...);
             if (_layers.size() > 0) {
                 size_t index_prev = _layers.size() - 1;
 
-                assert(_layers[index_prev]->_output == layer->_input);
+                assert(_layers[index_prev]->output() == layer->input());
             }
 
-            _layers.push_back(std::move(layer));
+            _layers.push_back(layer);
         }
 
         size_t num_weights() const
@@ -133,9 +147,10 @@ namespace simple_nn {
             return gradients;
         }
 
-        std::vector<std::unique_ptr<Layer>> _layers;
+    protected:
+        std::vector<std::shared_ptr<Layer>> _layers;
     };
 
-} // namespace nn
+} // namespace simple_nn
 
 #endif
