@@ -80,3 +80,6 @@ def build(bld):
                   target = 'regression')
 
     bld.add_post_fun(summary)
+
+    bld.install_files('${PREFIX}/include/simple_nn', 'src/simple_nn/neural_net.hpp')
+    bld.install_files('${PREFIX}/include/simple_nn', 'src/simple_nn/layer.hpp')
