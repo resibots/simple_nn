@@ -39,6 +39,17 @@ namespace simple_nn {
             _layers.push_back(layer);
         }
 
+        void remove_layer(size_t index)
+        {
+            assert(index < _layers.size());
+            _layers.erase(_layers.begin() + index);
+        }
+
+        void clear_layers()
+        {
+            _layers.clear();
+        }
+
         size_t num_weights() const
         {
             size_t n = 0;
