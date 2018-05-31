@@ -99,6 +99,14 @@ namespace simple_nn {
             return result;
         }
 
+        template <typename Loss>
+        double get_loss(const Eigen::MatrixXd& input, const Eigen::MatrixXd& output) const
+        {
+            Eigen::MatrixXd y = forward(input);
+            return Loss::f(y, output);
+        }
+
+        template <typename Loss>
         Eigen::VectorXd backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& output) const
         {
             Eigen::VectorXd gradients = Eigen::VectorXd::Zero(num_weights());
@@ -117,7 +125,8 @@ namespace simple_nn {
             std::vector<Eigen::MatrixXd> deltas(_layers.size() + 1);
             std::vector<Eigen::MatrixXd> grads(_layers.size());
 
-            deltas.back() = (result.array() - output.array());
+            // deltas.back() = (result.array() - output.array());
+            deltas.back() = Loss::df(result, output);
 
             // std::cout << deltas.back().rows() << "x" << deltas.back().cols() << std::endl;
 

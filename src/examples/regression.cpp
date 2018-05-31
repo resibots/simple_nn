@@ -1,20 +1,8 @@
 #include <ctime>
 #include <iostream>
 
+#include <simple_nn/loss.hpp>
 #include <simple_nn/neural_net.hpp>
-
-double mse_loss(const simple_nn::NeuralNet& network, const Eigen::MatrixXd& input, const Eigen::MatrixXd& output)
-{
-    // compute MSE
-    Eigen::MatrixXd y = network.forward(input);
-    double mse = 0.;
-    for (int i = 0; i < y.cols(); i++) {
-        mse += (y.col(i) - output.col(i)).squaredNorm();
-    }
-    mse /= double(y.cols());
-
-    return mse;
-}
 
 int main()
 {
@@ -36,7 +24,7 @@ int main()
     Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
     network.set_weights(theta);
 
-    std::cout << "Initial MSE: " << mse_loss(network, input, output) << std::endl;
+    std::cout << "Initial MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
 
     // let's do an optimization
     // 1000 iterations/epochs
@@ -46,18 +34,18 @@ int main()
 
     for (int i = 0; i < epochs; i++) {
         // get gradients
-        Eigen::VectorXd dtheta = network.backward(input, output);
+        Eigen::VectorXd dtheta = network.backward<simple_nn::SquaredError>(input, output);
 
         // update weights
         theta = theta.array() - eta * dtheta.array();
         network.set_weights(theta);
 
         if (i % 100 == 0) {
-            std::cout << "MSE: " << mse_loss(network, input, output) << std::endl;
+            std::cout << "MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
         }
     }
 
-    std::cout << "Final MSE: " << mse_loss(network, input, output) << std::endl;
+    std::cout << "Final MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
 
     return 0;
 }
