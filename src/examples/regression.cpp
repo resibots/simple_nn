@@ -30,11 +30,11 @@ int main()
     // 1000 iterations/epochs
     int epochs = 1000;
     // learning rate
-    double eta = 0.001;
+    double eta = 0.01;
 
     for (int i = 0; i < epochs; i++) {
         // get gradients
-        Eigen::VectorXd dtheta = network.backward<simple_nn::SquaredError>(input, output);
+        Eigen::VectorXd dtheta = network.backward<simple_nn::MeanSquaredError>(input, output);
 
         // update weights
         theta = theta.array() - eta * dtheta.array();
