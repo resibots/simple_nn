@@ -84,6 +84,11 @@ namespace simple_nn {
             }
         }
 
+        std::vector<std::shared_ptr<Layer>> layers() const
+        {
+            return _layers;
+        }
+
         Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const
         {
             Eigen::MatrixXd result = input;
