@@ -8,16 +8,16 @@ int main()
 {
     std::srand(std::time(NULL));
     // simple 1D regression
-    // generate 50 random data in [-5,5]
+    // generate 200 random data in [-5,5]
     Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 200).array() * 5.;
     // function is linear combination
     Eigen::MatrixXd output = input.array().cos();
 
     // Let's create our neural network
     simple_nn::NeuralNet network;
-    // 1 hidden layer with 20 unites and sigmoid activation function
+    // 1 hidden layer with 20 unites and tanh activation function
     network.add_layer<simple_nn::TanhLayer>(1, 20);
-    // 1 output layer with sigmoid activation function
+    // 1 output layer with tanh activation function
     network.add_layer<simple_nn::TanhLayer>(20, 1);
 
     // Random initial weights
