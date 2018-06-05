@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(test_gradients)
 
     network.add_layer<simple_nn::SigmoidLayer>(5, 20);
     network.add_layer<simple_nn::FullyConnectedLayer>(20, 2);
-    network.add_layer<simple_nn::TanhLayer>(2, 20);
-    network.add_layer<simple_nn::SigmoidLayer>(20, 2);
+    network.add_layer<simple_nn::SigmoidLayer>(2, 20);
+    network.add_layer<simple_nn::TanhLayer>(20, 2);
 
     int N = 50;
     int fails = 0;
@@ -84,6 +84,32 @@ BOOST_AUTO_TEST_CASE(test_gradients)
         Eigen::VectorXd analytic, finite_diff;
 
         std::tie(err, analytic, finite_diff) = check_grad<simple_nn::SquaredError>(network, input, output, theta);
+
+        if (err > 1e-5) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
+
+    fails = 0;
+
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(5, 20).array() * 10.;
+        Eigen::MatrixXd output = Eigen::MatrixXd::Random(1, 20);
+
+        Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
+
+        network.set_weights(theta);
+
+        double err;
+        Eigen::VectorXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::NegativeLogGaussianPrediction>(network, input, output, theta, 1e-8);
+        // std::cout << analytic.transpose() << std::endl
+        //           << finite_diff.transpose() << std::endl;
+        // std::cout << "Error: " << err << std::endl
+        //           << std::endl;
 
         if (err > 1e-5) {
             fails++;

@@ -79,6 +79,13 @@ def build(bld):
                   uselib = libs,
                   target = 'regression')
 
+    bld.program(features = 'cxx',
+                  install_path = None,
+                  source = 'src/examples/probabilistic.cpp',
+                  includes = './src',
+                  uselib = libs,
+                  target = 'probabilistic')
+
     bld.add_post_fun(summary)
 
     bld.install_files('${PREFIX}/include/simple_nn', 'src/simple_nn/neural_net.hpp')
