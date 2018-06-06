@@ -16,9 +16,9 @@ int main()
     // Let's create our neural network
     simple_nn::NeuralNet network;
     // 1 hidden layer with 20 unites and sigmoid activation function
-    network.add_layer<simple_nn::SigmoidLayer>(1, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Sigmoid>>(1, 20);
     // 1 output layer with no activation function
-    network.add_layer<simple_nn::FullyConnectedLayer>(20, 2);
+    network.add_layer<simple_nn::FullyConnectedLayer<>>(20, 2);
 
     // Random initial weights
     Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());

@@ -42,10 +42,10 @@ BOOST_AUTO_TEST_CASE(test_gradients)
 
     simple_nn::NeuralNet network;
 
-    network.add_layer<simple_nn::SigmoidLayer>(5, 20);
-    network.add_layer<simple_nn::FullyConnectedLayer>(20, 2);
-    network.add_layer<simple_nn::SigmoidLayer>(2, 20);
-    network.add_layer<simple_nn::TanhLayer>(20, 2);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Sigmoid>>(5, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer<>>(20, 2);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Sigmoid>>(2, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(20, 2);
 
     int N = 50;
     int fails = 0;

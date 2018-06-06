@@ -5,6 +5,8 @@
 
 #include <tuple>
 
+#include <simple_nn/activation.hpp>
+
 namespace simple_nn {
     struct Layer {
     public:
@@ -28,6 +30,7 @@ namespace simple_nn {
         size_t _input, _output;
     };
 
+    template <typename Activation = Linear>
     struct FullyConnectedLayer : public Layer {
     public:
         FullyConnectedLayer(size_t input, size_t output) : Layer(input, output)
@@ -37,8 +40,8 @@ namespace simple_nn {
 
         virtual std::shared_ptr<Layer> clone() const
         {
-            std::shared_ptr<Layer> layer = std::make_shared<FullyConnectedLayer>(_input, _output);
-            std::static_pointer_cast<FullyConnectedLayer>(layer)->_W = _W;
+            std::shared_ptr<Layer> layer = std::make_shared<FullyConnectedLayer<Activation>>(_input, _output);
+            std::static_pointer_cast<FullyConnectedLayer<Activation>>(layer)->_W = _W;
 
             return layer;
         }
@@ -90,72 +93,18 @@ namespace simple_nn {
             Eigen::MatrixXd input_bias = input;
             input_bias.conservativeResize(input_bias.rows() + 1, input_bias.cols());
             input_bias.row(input_bias.rows() - 1) = Eigen::VectorXd::Ones(input.cols());
-            return _W * input_bias;
+            return Activation::f(_W * input_bias);
         }
 
-        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd&, const Eigen::MatrixXd& delta) const override
+        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
         {
-            return std::make_tuple(_W.transpose() * delta, delta);
+            Eigen::MatrixXd val = forward(input);
+            Eigen::MatrixXd tmp = delta.array() * Activation::df(val).array();
+            return std::make_tuple(_W.transpose() * tmp, tmp);
         }
 
     protected:
         Eigen::MatrixXd _W;
-    };
-
-    struct SigmoidLayer : public FullyConnectedLayer {
-    public:
-        SigmoidLayer(size_t input, size_t output) : FullyConnectedLayer(input, output) {}
-
-        virtual std::shared_ptr<Layer> clone() const
-        {
-            std::shared_ptr<Layer> layer = std::make_shared<SigmoidLayer>(_input, _output);
-            std::static_pointer_cast<SigmoidLayer>(layer)->_W = _W;
-
-            return layer;
-        }
-
-        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
-        {
-            Eigen::MatrixXd output = FullyConnectedLayer::forward(input);
-            return 1. / (1. + (-output).array().exp());
-        }
-
-        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
-        {
-            Eigen::MatrixXd val = forward(input);
-            Eigen::MatrixXd grad = (val.array() * (1. - val.array()));
-            Eigen::MatrixXd tmp = delta.array() * grad.array();
-
-            return std::make_tuple(_W.transpose() * tmp, tmp);
-        }
-    };
-
-    struct TanhLayer : public FullyConnectedLayer {
-    public:
-        TanhLayer(size_t input, size_t output) : FullyConnectedLayer(input, output) {}
-
-        virtual std::shared_ptr<Layer> clone() const
-        {
-            std::shared_ptr<Layer> layer = std::make_shared<TanhLayer>(_input, _output);
-            std::static_pointer_cast<TanhLayer>(layer)->_W = _W;
-
-            return layer;
-        }
-
-        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
-        {
-            Eigen::MatrixXd output = FullyConnectedLayer::forward(input);
-            return output.array().tanh();
-        }
-
-        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
-        {
-            Eigen::MatrixXd val = forward(input);
-            Eigen::MatrixXd grad = 1. - val.array().square();
-            Eigen::MatrixXd tmp = delta.array() * grad.array();
-
-            return std::make_tuple(_W.transpose() * tmp, tmp);
-        }
     };
 } // namespace simple_nn
 
