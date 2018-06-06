@@ -88,17 +88,23 @@ namespace simple_nn {
             return w;
         }
 
-        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
+        Eigen::MatrixXd compute(const Eigen::MatrixXd& input) const
         {
             Eigen::MatrixXd input_bias = input;
             input_bias.conservativeResize(input_bias.rows() + 1, input_bias.cols());
             input_bias.row(input_bias.rows() - 1) = Eigen::VectorXd::Ones(input.cols());
-            return Activation::f(_W * input_bias);
+
+            return _W * input_bias;
+        }
+
+        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
+        {
+            return Activation::f(compute(input));
         }
 
         virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
         {
-            Eigen::MatrixXd val = forward(input);
+            Eigen::MatrixXd val = compute(input);
             Eigen::MatrixXd tmp = delta.array() * Activation::df(val).array();
             return std::make_tuple(_W.transpose() * tmp, tmp);
         }

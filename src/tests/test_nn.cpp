@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE(test_gradients)
 
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Sigmoid>>(5, 20);
     network.add_layer<simple_nn::FullyConnectedLayer<>>(20, 2);
-    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Sigmoid>>(2, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Swish>>(2, 20);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::ReLU>>(20, 20);
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(20, 2);
 
     int N = 50;
@@ -111,7 +112,7 @@ BOOST_AUTO_TEST_CASE(test_gradients)
         // std::cout << "Error: " << err << std::endl
         //           << std::endl;
 
-        if (err > 1e-5) {
+        if (err > 1e-4) {
             fails++;
         }
     }
