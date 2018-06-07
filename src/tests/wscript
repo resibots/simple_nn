@@ -8,3 +8,18 @@ def build(bld):
                 target='test_nn',
                 uselib=libs,
                 cxxflags = cxxflags)
+
+    bld.program(features='cxx test',
+                source='test_loss.cpp',
+                includes='..',
+                target='test_loss',
+                uselib=libs,
+                cxxflags = cxxflags)
+
+    bld.program(features='cxx test',
+                source='test_activation.cpp',
+                includes='..',
+                target='test_activation',
+                uselib=libs,
+                cxxflags = cxxflags)
+

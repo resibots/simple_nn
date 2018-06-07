@@ -30,6 +30,19 @@ namespace simple_nn {
         }
     };
 
+    struct Gaussian {
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            return (-input.array().square()).exp();
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            Eigen::MatrixXd value = f(input);
+            return -2. * input.array() * value.array();
+        }
+    };
+
     struct Swish {
         static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
         {

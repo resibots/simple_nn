@@ -85,16 +85,16 @@ namespace simple_nn {
         {
             size_t dim = y.rows() / 2;
             Eigen::MatrixXd mu = y.block(0, 0, dim, y.cols());
-            Eigen::MatrixXd sigma = y.block(dim, 0, dim, y.cols()).array().exp();
+            Eigen::MatrixXd log_sigma = y.block(dim, 0, dim, y.cols());
+            Eigen::MatrixXd sigma = log_sigma.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
             Eigen::MatrixXd inv_sigma = 1. / sigma.array();
-            Eigen::VectorXd logdet_sigma = sigma.colwise().sum();
+            Eigen::VectorXd logdet_sigma = log_sigma.colwise().sum();
 
             double loss = 0.;
             for (int i = 0; i < y.cols(); i++) {
-                Eigen::MatrixXd inv_S(dim, dim);
-                inv_S.diagonal() = inv_sigma.col(i);
+                Eigen::MatrixXd inv_S = inv_sigma.col(i).asDiagonal();
 
                 loss += diff.col(i).transpose() * inv_S * diff.col(i) + logdet_sigma(i);
             }
@@ -106,11 +106,12 @@ namespace simple_nn {
         {
             size_t dim = y.rows() / 2;
             Eigen::MatrixXd mu = y.block(0, 0, dim, y.cols());
-            Eigen::MatrixXd sigma = y.block(dim, 0, dim, y.cols()).array().exp();
+            Eigen::MatrixXd log_sigma = y.block(dim, 0, dim, y.cols());
+            Eigen::MatrixXd sigma = log_sigma.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
             Eigen::MatrixXd inv_sigma = 1. / sigma.array();
-            Eigen::VectorXd logdet_sigma = sigma.colwise().sum();
+            Eigen::VectorXd logdet_sigma = log_sigma.colwise().sum();
 
             Eigen::MatrixXd grad = Eigen::MatrixXd::Zero(y.rows(), y.cols());
 
@@ -119,15 +120,13 @@ namespace simple_nn {
 
             // grad.block(dim, 0, dim, y.cols()) = -(diff.array() * inv_sigma.array()).square(); // this is for non log/exp
             for (int i = 0; i < y.cols(); i++) {
-                Eigen::MatrixXd inv_S(dim, dim);
-                inv_S.diagonal() = inv_sigma.col(i);
-
-                grad.col(i).tail(dim) = -(diff.col(i).transpose() * inv_S * diff.col(i));
+                Eigen::VectorXd diff_sq = diff.col(i).array().square();
+                grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array();
             }
 
             // gradient for log-det sigma
             for (int i = 0; i < y.cols(); i++) {
-                grad.col(i).tail(dim).array() += logdet_sigma(i); // Eigen::VectorXd::Ones(dim); // this is for non log/exp
+                grad.col(i).tail(dim).array() += Eigen::VectorXd::Ones(dim).array();
             }
 
             return grad;
