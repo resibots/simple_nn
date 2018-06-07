@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_gradients)
         // std::cout << "Error: " << err << std::endl
         //           << std::endl;
 
-        if (err > 1e-5) {
+        if (err > 1e-4) {
             fails++;
         }
     }
