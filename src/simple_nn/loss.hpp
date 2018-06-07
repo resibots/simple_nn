@@ -8,7 +8,7 @@ namespace simple_nn {
     public:
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
-            return (y.array() - y_d.array()).square().rowwise().sum().sum() / static_cast<double>(y.cols());
+            return (y.array() - y_d.array()).square().colwise().sum().sum() / static_cast<double>(y.cols());
         }
 
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
@@ -21,7 +21,7 @@ namespace simple_nn {
     public:
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
-            return (y.array() - y_d.array()).square().rowwise().sum().sum();
+            return (y.array() - y_d.array()).square().colwise().sum().sum();
         }
 
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
@@ -34,7 +34,7 @@ namespace simple_nn {
     public:
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
-            return (y.array() - y_d.array()).abs().rowwise().sum().sum() / static_cast<double>(y.cols());
+            return (y.array() - y_d.array()).abs().colwise().sum().sum() / static_cast<double>(y.cols());
         }
 
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
@@ -55,7 +55,7 @@ namespace simple_nn {
     public:
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
-            return (-y_d.array() * y.array().log()).rowwise().sum().sum();
+            return (-y_d.array() * y.array().log()).colwise().sum().sum();
         }
 
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
@@ -68,7 +68,7 @@ namespace simple_nn {
     public:
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
-            return (-y_d.array() * y.array().log() - (1. - y_d.array()) * (1. - y.array()).log()).rowwise().sum().sum();
+            return (-y_d.array() * y.array().log() - (1. - y_d.array()) * (1. - y.array()).log()).colwise().sum().sum();
         }
 
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
