@@ -89,7 +89,7 @@ namespace simple_nn {
             Eigen::MatrixXd sigma = log_sigma.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
-            Eigen::MatrixXd inv_sigma = 1. / (sigma.array() + 1e-6);
+            Eigen::MatrixXd inv_sigma = 1. / (sigma.array() + 1e-8);
             Eigen::VectorXd logdet_sigma = log_sigma.colwise().sum();
 
             double loss = 0.;
@@ -110,7 +110,7 @@ namespace simple_nn {
             Eigen::MatrixXd sigma = log_sigma.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
-            Eigen::MatrixXd inv_sigma = 1. / sigma.array();
+            Eigen::MatrixXd inv_sigma = 1. / (sigma.array() + 1e-8);
             Eigen::VectorXd logdet_sigma = log_sigma.colwise().sum();
 
             Eigen::MatrixXd grad = Eigen::MatrixXd::Zero(y.rows(), y.cols());
