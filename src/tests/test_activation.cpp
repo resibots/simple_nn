@@ -114,4 +114,36 @@ BOOST_AUTO_TEST_CASE(test_gradients)
     }
 
     BOOST_CHECK(fails < N / 3);
+
+    fails = 0;
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(4, 20).array() * 10.;
+
+        double err;
+        Eigen::MatrixXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::Cos>(input);
+
+        if (err > 1e-5) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
+
+    fails = 0;
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(4, 20).array() * 10.;
+
+        double err;
+        Eigen::MatrixXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::Sin>(input);
+
+        if (err > 1e-5) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
 }

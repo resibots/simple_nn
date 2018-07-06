@@ -69,6 +69,30 @@ namespace simple_nn {
         }
     };
 
+    struct Cos {
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            return input.array().cos();
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            return -input.array().sin();
+        }
+    };
+
+    struct Sin {
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            return input.array().sin();
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            return input.array().cos();
+        }
+    };
+
     struct ReLU {
         static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
         {
