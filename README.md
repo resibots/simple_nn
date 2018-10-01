@@ -2,7 +2,7 @@
 
 #### A highly generic and easy to use C++ library for feed-forward neural networks.
 
-## Authors
+### Authors
 
 - Author/Maintainer: Konstantinos Chatzilygeroudis
 
