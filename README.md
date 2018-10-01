@@ -1,6 +1,6 @@
 # simple_nn
 
-#### A highly generic and easy to use C++ library for feedforward neural networks.
+#### A lightweight, generic and easy to use C++ library for feedforward neural networks.
 
 ### Authors
 
