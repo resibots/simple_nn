@@ -30,7 +30,7 @@
 #include <Eigen/Core>
 
 #include <memory>
-#include <tuple>
+#include <vector>
 
 #include <simple_nn/layer.hpp>
 
