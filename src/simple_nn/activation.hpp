@@ -56,6 +56,22 @@ namespace simple_nn {
         }
     };
 
+    struct Softmax {
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            Eigen::MatrixXd tmp = input.array().exp();
+            Eigen::VectorXd t = tmp.rowwise().sum();
+            tmp.array().colwise() /= t.array();
+            return tmp;
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            Eigen::MatrixXd value = f(input);
+            return (value.array() * (1. - value.array()));
+        }
+    };
+
     struct Gaussian {
         static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
         {
