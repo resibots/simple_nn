@@ -60,8 +60,8 @@ namespace simple_nn {
         static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
         {
             Eigen::MatrixXd tmp = input.array().exp();
-            Eigen::VectorXd t = tmp.rowwise().sum();
-            tmp.array().colwise() /= t.array();
+            Eigen::VectorXd t = tmp.colwise().sum();
+            tmp.array().rowwise() /= t.transpose().array();
             return tmp;
         }
 
