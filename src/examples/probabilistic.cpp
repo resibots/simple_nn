@@ -35,7 +35,7 @@ int main()
     std::srand(std::time(NULL));
     // simple 1D regression
     // generate 200 random data in [-5,5]
-    Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 500).array() * 5.;
+    Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 200).array() * 5.;
     // function is linear combination
     Eigen::MatrixXd output = input.array().cos();
 
