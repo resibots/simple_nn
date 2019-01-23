@@ -103,15 +103,28 @@ namespace simple_nn {
         }
     };
 
+    struct NLGPParams {
+        static constexpr double max_logvar = 0.5;
+        static constexpr double min_logvar = -10;
+    };
+
     // output is gaussian with diagonal covariance
     // mu0, mu1, ... , log(s00), log(s11), ...
+    template <typename Params = NLGPParams>
     struct NegativeLogGaussianPrediction {
     public:
+        static constexpr double max_logvar = Params::max_logvar;
+        static constexpr double min_logvar = Params::min_logvar;
+
         static double f(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
             size_t dim = y.rows() / 2;
+
             Eigen::MatrixXd mu = y.block(0, 0, dim, y.cols());
             Eigen::MatrixXd log_sigma = y.block(dim, 0, dim, y.cols());
+            log_sigma = max_logvar - ((max_logvar - log_sigma.array()).exp() + 1.).log();
+            log_sigma = min_logvar + ((log_sigma.array() - min_logvar).exp() + 1.).log();
+
             Eigen::MatrixXd sigma = log_sigma.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
@@ -131,31 +144,42 @@ namespace simple_nn {
         static Eigen::MatrixXd df(const Eigen::MatrixXd& y, const Eigen::MatrixXd& y_d)
         {
             size_t dim = y.rows() / 2;
+
             Eigen::MatrixXd mu = y.block(0, 0, dim, y.cols());
             Eigen::MatrixXd log_sigma = y.block(dim, 0, dim, y.cols());
-            Eigen::MatrixXd sigma = log_sigma.array().exp();
+            Eigen::MatrixXd l1 = max_logvar - ((max_logvar - log_sigma.array()).exp() + 1.).log();
+            Eigen::MatrixXd l2 = min_logvar + ((l1.array() - min_logvar).exp() + 1.).log();
+
+            Eigen::MatrixXd sigma = l2.array().exp();
 
             Eigen::MatrixXd diff = mu.array() - y_d.array();
             Eigen::MatrixXd inv_sigma = 1. / (sigma.array() + 1e-8);
-            Eigen::VectorXd logdet_sigma = log_sigma.colwise().sum();
+            Eigen::VectorXd logdet_sigma = l2.colwise().sum();
 
             Eigen::MatrixXd grad = Eigen::MatrixXd::Zero(y.rows(), y.cols());
 
             // gradient for the first term
             grad.block(0, 0, dim, y.cols()) = 2. * diff.array() * inv_sigma.array();
-
             // grad.block(dim, 0, dim, y.cols()) = -(diff.array() * inv_sigma.array()).square(); // this is for non log/exp
+
             for (int i = 0; i < y.cols(); i++) {
                 Eigen::VectorXd diff_sq = diff.col(i).array().square();
-                grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array();
+                grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array(); // this is for without bounds for variance
+                grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array() * logistic(l1.col(i).array() - min_logvar).array() * logistic(max_logvar - log_sigma.col(i).array()).array();
             }
 
             // gradient for log-det sigma
             for (int i = 0; i < y.cols(); i++) {
-                grad.col(i).tail(dim).array() += Eigen::VectorXd::Ones(dim).array();
+                // grad.col(i).tail(dim).array() += Eigen::VectorXd::Ones(dim).array(); // this is for without bounds for variance
+                grad.col(i).tail(dim).array() += logistic(l1.col(i).array() - min_logvar).array() * logistic(max_logvar - log_sigma.col(i).array()).array();
             }
 
             return grad;
+        }
+
+        static Eigen::VectorXd logistic(const Eigen::VectorXd& input)
+        {
+            return 1. / (1. + (-input).array().exp());
         }
     };
 } // namespace simple_nn

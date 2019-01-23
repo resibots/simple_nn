@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(test_gradients)
         double err;
         Eigen::MatrixXd analytic, finite_diff;
 
-        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::NegativeLogGaussianPrediction>(input, output, 1e-8);
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::NegativeLogGaussianPrediction<>>(input, output, 1e-8);
         // std::cout << analytic << std::endl
         //           << std::endl
         //           << finite_diff << std::endl;

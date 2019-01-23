@@ -50,7 +50,7 @@ int main()
     Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
     network.set_weights(theta);
 
-    std::cout << "Initial: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction>(input, output) << std::endl;
+    std::cout << "Initial: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
 
     // let's do an optimization
     // 10000 iterations/epochs
@@ -60,18 +60,18 @@ int main()
 
     for (int i = 0; i < epochs; i++) {
         // get gradients
-        Eigen::VectorXd dtheta = network.backward<simple_nn::NegativeLogGaussianPrediction>(input, output);
+        Eigen::VectorXd dtheta = network.backward<simple_nn::NegativeLogGaussianPrediction<>>(input, output);
 
         // update weights
         theta = theta.array() - eta * dtheta.array();
         network.set_weights(theta);
 
         if (i % 1000 == 0) {
-            std::cout << i << ": " << network.get_loss<simple_nn::NegativeLogGaussianPrediction>(input, output) << std::endl;
+            std::cout << i << ": " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
         }
     }
 
-    std::cout << "Final: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction>(input, output) << std::endl;
+    std::cout << "Final: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
 
     Eigen::VectorXd query(1);
     query << 0.;
