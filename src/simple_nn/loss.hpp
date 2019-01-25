@@ -103,14 +103,14 @@ namespace simple_nn {
         }
     };
 
-    struct NLGPParams {
+    struct NLGPDefaultParams {
         static constexpr double max_logvar = 0.5;
         static constexpr double min_logvar = -10;
     };
 
     // output is gaussian with diagonal covariance
     // mu0, mu1, ... , log(s00), log(s11), ...
-    template <typename Params = NLGPParams>
+    template <typename Params = NLGPDefaultParams>
     struct NegativeLogGaussianPrediction {
     public:
         static constexpr double max_logvar = Params::max_logvar;
