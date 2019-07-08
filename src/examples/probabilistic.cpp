@@ -25,6 +25,7 @@
 //| knowledge of the CeCILL-C license and that you accept its terms.
 //|
 #include <ctime>
+#include <fstream>
 #include <iostream>
 
 #include <simple_nn/loss.hpp>
@@ -73,12 +74,28 @@ int main()
 
     std::cout << "Final: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
 
-    Eigen::VectorXd query(1);
-    query << 0.;
+    // write the predicted data in a file (e.g. to be plotted)
+    std::ofstream ofs("nn.dat");
+    for (int i = 0; i < 500; ++i) {
+        Eigen::VectorXd query(1);
+        query << (i / 500.) * 20. - 10.;
 
-    Eigen::MatrixXd out = network.forward(query);
+        Eigen::MatrixXd out = network.forward(query);
 
-    std::cout << out(0, 0) << " " << std::exp(out(1, 0)) << std::endl;
+        double log_sigma = out(1, 0);
+        double max_logvar = simple_nn::NLGPDefaultParams::max_logvar;
+        double min_logvar = simple_nn::NLGPDefaultParams::min_logvar;
+        log_sigma = max_logvar - std::log(std::exp(max_logvar - log_sigma) + 1.);
+        log_sigma = min_logvar + std::log(std::exp(log_sigma - min_logvar) + 1.);
+        double sigma = std::exp(log_sigma);
+
+        ofs << query.transpose() << " " << out(0, 0) << " " << sqrt(sigma) << std::endl;
+    }
+
+    std::ofstream ofs_data("data.dat");
+    for (int i = 0; i < input.cols(); i++) {
+        ofs_data << input.col(i).transpose() << " " << output.col(i).transpose() << std::endl;
+    }
 
     return 0;
 }
