@@ -29,6 +29,7 @@
 
 #include <Eigen/Core>
 
+#include <memory>
 #include <tuple>
 
 #include <simple_nn/activation.hpp>
@@ -61,9 +62,10 @@ namespace simple_nn {
     public:
         template <typename... Args>
         ScaledLayer(double scaling, Args&&... args) : LayerType(std::forward<Args>(args)...), _scaling(Eigen::VectorXd::Constant(LayerType::output(), scaling)) {}
+        template <typename... Args>
+        ScaledLayer(const Eigen::VectorXd& scaling, Args&&... args) : LayerType(std::forward<Args>(args)...), _scaling(scaling) {}
 
         ScaledLayer(double scaling, const LayerType& other) : LayerType(other), _scaling(Eigen::VectorXd::Constant(LayerType::output(), scaling)) {}
-
         ScaledLayer(const Eigen::VectorXd& scaling, const LayerType& other) : LayerType(other), _scaling(scaling)
         {
             assert(static_cast<size_t>(_scaling.size()) == LayerType::output());
@@ -102,9 +104,10 @@ namespace simple_nn {
     public:
         template <typename... Args>
         AdditionLayer(double addition, Args&&... args) : LayerType(std::forward<Args>(args)...), _addition(Eigen::VectorXd::Constant(LayerType::output(), addition)) {}
+        template <typename... Args>
+        AdditionLayer(const Eigen::VectorXd& addition, Args&&... args) : LayerType(std::forward<Args>(args)...), _addition(addition) {}
 
         AdditionLayer(double addition, const LayerType& other) : LayerType(other), _addition(Eigen::VectorXd::Constant(LayerType::output(), addition)) {}
-
         AdditionLayer(const Eigen::VectorXd& addition, const LayerType& other) : LayerType(other), _addition(addition)
         {
             assert(static_cast<size_t>(_addition.size()) == LayerType::output());
