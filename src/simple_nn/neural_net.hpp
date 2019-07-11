@@ -62,6 +62,17 @@ namespace simple_nn {
             _layers.push_back(layer);
         }
 
+        void add_layer(const std::shared_ptr<Layer>& layer)
+        {
+            if (_layers.size() > 0) {
+                size_t index_prev = _layers.size() - 1;
+
+                assert(_layers[index_prev]->output() == layer->input());
+            }
+
+            _layers.push_back(layer);
+        }
+
         void remove_layer(size_t index)
         {
             assert(index < _layers.size());
