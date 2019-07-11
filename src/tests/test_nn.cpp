@@ -72,7 +72,9 @@ BOOST_AUTO_TEST_CASE(test_gradients)
     network.add_layer<simple_nn::FullyConnectedLayer<>>(20, 2);
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Swish>>(2, 20);
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::ReLU>>(20, 20);
-    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(20, 4);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(20, 20);
+    network.add_layer<simple_nn::AdditionLayer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>>(-1., 20, 20);
+    network.add_layer<simple_nn::ScaledLayer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>>(2., 20, 4);
 
     int N = 50;
     int fails = 0;

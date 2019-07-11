@@ -56,6 +56,79 @@ namespace simple_nn {
         size_t _input, _output;
     };
 
+    template <typename LayerType>
+    struct ScaledLayer : public LayerType {
+    public:
+        template <typename... Args>
+        ScaledLayer(double scaling, Args&&... args) : LayerType(std::forward<Args>(args)...), _scaling(Eigen::VectorXd::Constant(LayerType::output(), scaling)) {}
+
+        ScaledLayer(double scaling, const LayerType& other) : LayerType(other), _scaling(Eigen::VectorXd::Constant(LayerType::output(), scaling)) {}
+
+        ScaledLayer(const Eigen::VectorXd& scaling, const LayerType& other) : LayerType(other), _scaling(scaling)
+        {
+            assert(static_cast<size_t>(_scaling.size()) == LayerType::output());
+        }
+
+        virtual std::shared_ptr<Layer> clone() const
+        {
+            std::shared_ptr<Layer> layer = std::make_shared<ScaledLayer<LayerType>>(_scaling, *std::static_pointer_cast<LayerType>(LayerType::clone()));
+
+            return layer;
+        }
+
+        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
+        {
+            Eigen::MatrixXd result = LayerType::forward(input);
+            result.array().colwise() *= _scaling.array();
+
+            return result;
+        }
+
+        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
+        {
+            Eigen::MatrixXd d = delta;
+            d.array().colwise() *= _scaling.array();
+            std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> result = LayerType::backward(input, d);
+
+            return result;
+        }
+
+    protected:
+        Eigen::VectorXd _scaling;
+    };
+
+    template <typename LayerType>
+    struct AdditionLayer : public LayerType {
+    public:
+        template <typename... Args>
+        AdditionLayer(double addition, Args&&... args) : LayerType(std::forward<Args>(args)...), _addition(Eigen::VectorXd::Constant(LayerType::output(), addition)) {}
+
+        AdditionLayer(double addition, const LayerType& other) : LayerType(other), _addition(Eigen::VectorXd::Constant(LayerType::output(), addition)) {}
+
+        AdditionLayer(const Eigen::VectorXd& addition, const LayerType& other) : LayerType(other), _addition(addition)
+        {
+            assert(static_cast<size_t>(_addition.size()) == LayerType::output());
+        }
+
+        virtual std::shared_ptr<Layer> clone() const
+        {
+            std::shared_ptr<Layer> layer = std::make_shared<AdditionLayer<LayerType>>(_addition, *std::static_pointer_cast<LayerType>(LayerType::clone()));
+
+            return layer;
+        }
+
+        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
+        {
+            Eigen::MatrixXd result = LayerType::forward(input);
+            result.array().colwise() += _addition.array();
+
+            return result;
+        }
+
+    protected:
+        Eigen::VectorXd _addition;
+    };
+
     template <typename Activation = Linear>
     struct FullyConnectedLayer : public Layer {
     public:
