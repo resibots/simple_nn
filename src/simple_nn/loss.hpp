@@ -164,7 +164,7 @@ namespace simple_nn {
 
             for (int i = 0; i < y.cols(); i++) {
                 Eigen::VectorXd diff_sq = diff.col(i).array().square();
-                grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array(); // this is for without bounds for variance
+                // grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array(); // this is for without bounds for variance
                 grad.col(i).tail(dim) = -diff_sq.array() * inv_sigma.col(i).array() * logistic(l1.col(i).array() - min_logvar).array() * logistic(max_logvar - log_sigma.col(i).array()).array();
             }
 
