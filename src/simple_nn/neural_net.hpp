@@ -140,11 +140,8 @@ namespace simple_nn {
             return Loss::f(y, output);
         }
 
-        template <typename Loss>
-        Eigen::VectorXd backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& output) const
+        Eigen::VectorXd backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta_output) const
         {
-            Eigen::VectorXd gradients = Eigen::VectorXd::Zero(num_weights());
-
             std::vector<Eigen::MatrixXd> results(_layers.size());
 
             Eigen::MatrixXd result = input;
@@ -156,11 +153,38 @@ namespace simple_nn {
                 // std::cout << result.rows() << "x" << result.cols() << std::endl;
             }
 
+            return _gradients(results, delta_output);
+        }
+
+        template <typename Loss>
+        Eigen::VectorXd backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& output) const
+        {
+            std::vector<Eigen::MatrixXd> results(_layers.size());
+
+            Eigen::MatrixXd result = input;
+            for (size_t i = 0; i < _layers.size(); i++) {
+                // std::cout << i << ": " << result.rows() << "x" << result.cols() << std::endl;
+                results[i] = result;
+                result = _layers[i]->forward(result);
+                // results[i] = result;
+                // std::cout << result.rows() << "x" << result.cols() << std::endl;
+            }
+
+            return _gradients(results, Loss::df(result, output));
+        }
+
+    protected:
+        std::vector<std::shared_ptr<Layer>> _layers;
+
+        Eigen::VectorXd _gradients(std::vector<Eigen::MatrixXd>& results, const Eigen::MatrixXd& last_delta) const
+        {
+            Eigen::VectorXd gradients = Eigen::VectorXd::Zero(num_weights());
+
             std::vector<Eigen::MatrixXd> deltas(_layers.size() + 1);
             std::vector<Eigen::MatrixXd> grads(_layers.size());
 
             // deltas.back() = (result.array() - output.array());
-            deltas.back() = Loss::df(result, output);
+            deltas.back() = last_delta;
 
             // std::cout << deltas.back().rows() << "x" << deltas.back().cols() << std::endl;
 
@@ -205,9 +229,6 @@ namespace simple_nn {
 
             return gradients;
         }
-
-    protected:
-        std::vector<std::shared_ptr<Layer>> _layers;
     };
 
 } // namespace simple_nn
