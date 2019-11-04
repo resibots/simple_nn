@@ -99,3 +99,36 @@ BOOST_AUTO_TEST_CASE(test_gradients)
 
     BOOST_CHECK(fails < N / 3);
 }
+
+BOOST_AUTO_TEST_CASE(test_gradients_equation)
+{
+    std::srand(std::time(NULL));
+
+    simple_nn::NeuralNet network;
+
+    network.add_layer<simple_nn::EquationLayer>(5);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(4, 4);
+
+    int N = 50;
+    int fails = 0;
+
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(5, 20).array() * 10.;
+        Eigen::MatrixXd output = Eigen::MatrixXd::Random(4, 20);
+
+        Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
+
+        network.set_weights(theta);
+
+        double err;
+        Eigen::VectorXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::MeanSquaredError>(network, input, output, theta);
+
+        if (err > 1e-3) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
+}
