@@ -30,6 +30,7 @@
 
 #include <simple_nn/loss.hpp>
 #include <simple_nn/neural_net.hpp>
+#include <simple_nn/opt.hpp>
 
 int main()
 {
@@ -38,17 +39,17 @@ int main()
     // generate 200 random data in [-5,5]
     Eigen::MatrixXd input = Eigen::MatrixXd::Random(1, 200).array() * 5.;
     // function is linear combination
-    Eigen::MatrixXd output = input.array().cos();
+    Eigen::MatrixXd output = input.array().cos().array() + Eigen::MatrixXd::Random(1, 200).array() * 0.2;
 
     // Let's create our neural network
     simple_nn::NeuralNet network;
-    // 1 hidden layer with 20 unites and sigmoid activation function
-    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Gaussian>>(1, 20);
+    // 1 hidden layer with 20 units and tanh activation function
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(1, 20);
     // 1 output layer with no activation function
     network.add_layer<simple_nn::FullyConnectedLayer<>>(20, 2);
 
     // Random initial weights
-    Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
+    Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights()).array() * std::sqrt(1 / 20.);
     network.set_weights(theta);
 
     std::cout << "Initial: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
@@ -56,20 +57,33 @@ int main()
     // let's do an optimization
     // 10000 iterations/epochs
     int epochs = 10000;
-    // learning rate
-    double eta = 0.00001;
+    // Adam optimizer
+    simple_nn::Adam optimizer;
+    optimizer.reset(theta);
 
-    for (int i = 0; i < epochs; i++) {
+    // This is a functor that returns (value, gradient)
+    auto eval = [&](const Eigen::VectorXd& params) {
+        network.set_weights(params);
+
         // get gradients
         Eigen::VectorXd dtheta = network.backward<simple_nn::NegativeLogGaussianPrediction<>>(input, output);
 
-        // update weights
-        theta = theta.array() - eta * dtheta.array();
+        // Adam does not care about the value, so we do not spend time in computing it and return 0.
+        return std::make_pair(0., dtheta);
+    };
+
+    for (int i = 0; i < epochs; i++) {
+
+        bool stop;
+        std::tie(stop, std::ignore, theta) = optimizer.optimize_once(eval);
         network.set_weights(theta);
 
-        if (i % 1000 == 0) {
+        if (i % 100 == 0) {
             std::cout << i << ": " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
         }
+
+        if (stop)
+            break;
     }
 
     std::cout << "Final: " << network.get_loss<simple_nn::NegativeLogGaussianPrediction<>>(input, output) << std::endl;
