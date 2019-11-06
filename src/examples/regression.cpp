@@ -29,6 +29,7 @@
 
 #include <simple_nn/loss.hpp>
 #include <simple_nn/neural_net.hpp>
+#include <simple_nn/opt.hpp>
 
 int main()
 {
@@ -41,34 +42,47 @@ int main()
 
     // Let's create our neural network
     simple_nn::NeuralNet network;
-    // 1 hidden layer with 20 unites and tanh activation function
+    // 1 hidden layer with 20 units and tanh activation function
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(1, 20);
     // 1 output layer with tanh activation function
     network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(20, 1);
 
     // Random initial weights
-    Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights());
+    Eigen::VectorXd theta = Eigen::VectorXd::Random(network.num_weights()).array() * std::sqrt(1 / 20.);
     network.set_weights(theta);
 
     std::cout << "Initial MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
 
     // let's do an optimization
-    // 1000 iterations/epochs
-    int epochs = 1000;
-    // learning rate
-    double eta = 0.01;
+    // 5000 iterations/epochs
+    int epochs = 5000;
+    // Adam optimizer
+    simple_nn::Adam optimizer;
+    optimizer.reset(theta);
 
-    for (int i = 0; i < epochs; i++) {
+    // This is a functor that returns (value, gradient)
+    auto eval = [&](const Eigen::VectorXd& params) {
+        network.set_weights(params);
+
         // get gradients
         Eigen::VectorXd dtheta = network.backward<simple_nn::MeanSquaredError>(input, output);
 
-        // update weights
-        theta = theta.array() - eta * dtheta.array();
+        // Adam does not care about the value, so we do not spend time in computing it and return 0.
+        return std::make_pair(0., dtheta);
+    };
+
+    for (int i = 0; i < epochs; i++) {
+
+        bool stop;
+        std::tie(stop, std::ignore, theta) = optimizer.optimize_once(eval);
         network.set_weights(theta);
 
         if (i % 100 == 0) {
             std::cout << "MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
         }
+
+        if (stop)
+            break;
     }
 
     std::cout << "Final MSE: " << network.get_loss<simple_nn::MeanSquaredError>(input, output) << std::endl;
