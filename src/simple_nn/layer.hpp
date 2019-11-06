@@ -321,6 +321,145 @@ namespace simple_nn {
     protected:
         Eigen::MatrixXd _W;
     };
+
+    struct CustomLayer : public Layer {
+    public:
+        CustomLayer(size_t input) : Layer(input, 0) { _layer_output = 0; }
+
+        virtual std::shared_ptr<Layer> clone() const
+        {
+            std::shared_ptr<Layer> layer = std::make_shared<CustomLayer>(_input);
+            std::static_pointer_cast<CustomLayer>(layer)->_output = _output;
+            std::static_pointer_cast<CustomLayer>(layer)->_layer_output = _layer_output;
+            std::static_pointer_cast<CustomLayer>(layer)->_W = _W;
+            std::static_pointer_cast<CustomLayer>(layer)->_forward_activations = _forward_activations;
+            std::static_pointer_cast<CustomLayer>(layer)->_backward_activations = _backward_activations;
+            std::static_pointer_cast<CustomLayer>(layer)->_inputs = _inputs;
+            std::static_pointer_cast<CustomLayer>(layer)->_outputs = _outputs;
+
+            return layer;
+        }
+
+        virtual size_t num_weights() const
+        {
+            return _layer_output * (_input + 1);
+        }
+
+        void set_weights(const Eigen::MatrixXd& w)
+        {
+            assert(w.rows() == static_cast<int>(_layer_output));
+            assert(w.cols() == static_cast<int>(_input + 1));
+            _W = w;
+        }
+
+        virtual void set_weights_vector(const Eigen::VectorXd& w)
+        {
+            assert(w.size() == static_cast<int>(_layer_output * (_input + 1)));
+            _W.resize(_layer_output, _input + 1);
+
+            for (size_t i = 0; i < _layer_output; i++) {
+                for (size_t j = 0; j < (_input + 1); j++) {
+                    _W(i, j) = w(i * (_input + 1) + j);
+                }
+            }
+        }
+
+        Eigen::MatrixXd weights() const
+        {
+            return _W;
+        }
+
+        virtual Eigen::VectorXd weights_vector() const
+        {
+            Eigen::VectorXd w(_W.rows() * _W.cols());
+
+            for (size_t i = 0; i < _layer_output; i++) {
+                for (size_t j = 0; j < (_input + 1); j++) {
+                    w(i * (_input + 1) + j) = _W(i, j);
+                }
+            }
+
+            return w;
+        }
+
+        size_t layer_output() const { return _layer_output; }
+
+        Eigen::MatrixXd compute(const Eigen::MatrixXd& input) const
+        {
+            Eigen::MatrixXd input_bias = input;
+            input_bias.conservativeResize(input_bias.rows() + 1, input_bias.cols());
+            input_bias.row(input_bias.rows() - 1) = Eigen::VectorXd::Ones(input.cols());
+
+            return _W * input_bias;
+        }
+
+        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
+        {
+            Eigen::MatrixXd tmp = compute(input);
+            Eigen::MatrixXd out(_output, input.cols());
+            size_t total_r = 0, total_o = 0;
+            for (size_t i = 0; i < _inputs.size(); i++) {
+                size_t r = _inputs[i];
+                size_t o = _outputs[i];
+                out.block(total_o, 0, o, input.cols()) = _forward_activations[i](tmp.block(total_r, 0, r, input.cols()));
+                total_r += r;
+                total_o += o;
+            }
+
+            return out;
+        }
+
+        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
+        {
+            Eigen::MatrixXd output = compute(input);
+            Eigen::MatrixXd dlt = delta;
+
+            size_t total_r = 0;
+            for (size_t i = 0; i < _inputs.size(); i++) {
+                size_t r = _inputs[i];
+                size_t o = _outputs[i];
+                output.block(total_r, 0, r, input.cols()) = _backward_activations[i](output.block(total_r, 0, r, input.cols()));
+                if (r > o) {
+                    int n = r - o;
+                    int N = dlt.rows();
+                    dlt.conservativeResize(N + n, dlt.cols());
+                    int moving = N - total_r - 1;
+                    dlt.block(N - moving - 1, 0, moving, dlt.cols()) = dlt.block(total_r + 1, 0, moving, dlt.cols());
+                    for (int k = 0; k < n; k++) {
+                        dlt.row(total_r + 1 + k) = dlt.row(total_r);
+                    }
+                }
+                total_r += r;
+            }
+
+            Eigen::MatrixXd tmp = dlt.array() * output.array();
+            return std::make_tuple(_W.transpose() * tmp, tmp);
+        }
+
+        template <typename Activation>
+        void add_activation(size_t dim_in, size_t dim_out = 0)
+        {
+            size_t out = (dim_out > 0) ? dim_out : dim_in;
+            _layer_output += dim_in;
+            _output += out;
+
+            _inputs.push_back(dim_in);
+            _outputs.push_back(out);
+
+            _forward_activations.push_back(Activation::f);
+            _backward_activations.push_back(Activation::df);
+
+            _W.conservativeResize(_layer_output, _input);
+        }
+
+    protected:
+        Eigen::MatrixXd _W;
+
+        std::vector<std::function<Eigen::MatrixXd(const Eigen::MatrixXd&)>> _forward_activations;
+        std::vector<std::function<Eigen::MatrixXd(const Eigen::MatrixXd&)>> _backward_activations;
+        std::vector<size_t> _inputs, _outputs;
+        size_t _layer_output;
+    };
 } // namespace simple_nn
 
 #endif

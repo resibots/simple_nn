@@ -153,6 +153,55 @@ namespace simple_nn {
             return output;
         }
     };
+
+    struct Multiply {
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            Eigen::MatrixXd output = input.colwise().prod();
+
+            return output;
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            Eigen::MatrixXd output(input.rows(), input.cols());
+            // TO-DO: Make this faster
+            for (int r = 0; r < output.rows(); r++) {
+                for (int c = 0; c < output.cols(); c++) {
+                    Eigen::VectorXd col = input.col(c);
+                    col[r] = 1.;
+                    output(r, c) = col.prod();
+                }
+            }
+
+            return output;
+        }
+    };
+
+    struct Divide {
+        static constexpr double epsilon = 1e-16;
+
+        static Eigen::MatrixXd f(const Eigen::MatrixXd& input)
+        {
+            // We only divide two numbers
+            assert(input.rows() == 2);
+            Eigen::MatrixXd output = input.row(0).array() / (input.row(1).array() + epsilon);
+
+            return output;
+        }
+
+        static Eigen::MatrixXd df(const Eigen::MatrixXd& input)
+        {
+            // We only divide two numbers
+            assert(input.rows() == 2);
+            Eigen::MatrixXd output(input.rows(), input.cols());
+
+            output.row(0) = 1. / (input.row(1).array() + epsilon);
+            output.row(1) = -input.row(0).array() / (input.row(1).array() + epsilon).square();
+
+            return output;
+        }
+    };
 } // namespace simple_nn
 
 #endif
