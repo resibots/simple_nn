@@ -45,8 +45,13 @@ std::tuple<double, Eigen::MatrixXd, Eigen::MatrixXd> check_grad(const Eigen::Mat
             Eigen::MatrixXd test1 = x, test2 = x;
             test1(i, j) -= e;
             test2(i, j) += e;
-            double r1 = Activation::f(test1)(i, j);
-            double r2 = Activation::f(test2)(i, j);
+            Eigen::MatrixXd t1 = Activation::f(test1);
+            Eigen::MatrixXd t2 = Activation::f(test2);
+            int index = i;
+            if (index >= t1.rows() || index >= t2.rows())
+                index = std::min(t1.rows(), t2.rows()) - 1;
+            double r1 = t1(index, j);
+            double r2 = t2(index, j);
 
             finite_diff_result(i, j) = (r2 - r1) / (2.0 * e);
         }
@@ -183,6 +188,38 @@ BOOST_AUTO_TEST_CASE(test_gradients)
         std::tie(err, analytic, finite_diff) = check_grad<simple_nn::Sin>(input);
 
         if (err > 1e-5) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
+
+    fails = 0;
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(4, 20).array() * 10.;
+
+        double err;
+        Eigen::MatrixXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::Multiply>(input);
+
+        if (err > 1e-5) {
+            fails++;
+        }
+    }
+
+    BOOST_CHECK(fails < N / 3);
+
+    fails = 0;
+    for (int i = 0; i < N; i++) {
+        Eigen::MatrixXd input = Eigen::MatrixXd::Random(2, 20).array() * 10.;
+
+        double err;
+        Eigen::MatrixXd analytic, finite_diff;
+
+        std::tie(err, analytic, finite_diff) = check_grad<simple_nn::Divide>(input, 1e-5);
+
+        if (err > 1e-3) {
             fails++;
         }
     }
