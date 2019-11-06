@@ -215,113 +215,12 @@ namespace simple_nn {
         Eigen::MatrixXd _W;
     };
 
+    /// CustomLayer allows the implementation of layers with different activations per node
+    /// For example, it can allow the implementation of:
     /// Extrapolation and learning equations
     /// by Georg Martius, Christoph H. Lampert, 2016
-    /// https://arxiv.org/abs/1610.02995
+    /// https://arxiv.org/abs/1610.02995, https://arxiv.org/abs/1806.07259
     /// code: https://github.com/martius-lab/EQL
-    /// Assume functions: identity, cosine, sine, multiplication (in that order and fixed)
-    /// TO-DO: Add division layer: https://arxiv.org/abs/1806.07259
-    /// TO-DO: Make the functions generic and arbitrary in number
-    struct EquationLayer : public Layer {
-    public:
-        EquationLayer(size_t input) : Layer(input, 4)
-        {
-            _W.resize(_output + 1, _input + 1);
-        }
-
-        virtual std::shared_ptr<Layer> clone() const
-        {
-            std::shared_ptr<Layer> layer = std::make_shared<EquationLayer>(_input);
-            std::static_pointer_cast<EquationLayer>(layer)->_W = _W;
-
-            return layer;
-        }
-
-        virtual size_t num_weights() const
-        {
-            return (_output + 1) * (_input + 1);
-        }
-
-        void set_weights(const Eigen::MatrixXd& w)
-        {
-            assert(w.rows() == static_cast<int>(_output + 1));
-            assert(w.cols() == static_cast<int>(_input + 1));
-            _W = w;
-        }
-
-        virtual void set_weights_vector(const Eigen::VectorXd& w)
-        {
-            assert(w.size() == static_cast<int>((_output + 1) * (_input + 1)));
-            _W.resize(_output + 1, _input + 1);
-
-            for (size_t i = 0; i < (_output + 1); i++) {
-                for (size_t j = 0; j < (_input + 1); j++) {
-                    _W(i, j) = w(i * (_input + 1) + j);
-                }
-            }
-        }
-
-        Eigen::MatrixXd weights() const
-        {
-            return _W;
-        }
-
-        virtual Eigen::VectorXd weights_vector() const
-        {
-            Eigen::VectorXd w(_W.rows() * _W.cols());
-
-            for (size_t i = 0; i < (_output + 1); i++) {
-                for (size_t j = 0; j < (_input + 1); j++) {
-                    w(i * (_input + 1) + j) = _W(i, j);
-                }
-            }
-
-            return w;
-        }
-
-        Eigen::MatrixXd compute(const Eigen::MatrixXd& input) const
-        {
-            Eigen::MatrixXd input_bias = input;
-            input_bias.conservativeResize(input_bias.rows() + 1, input_bias.cols());
-            input_bias.row(input_bias.rows() - 1) = Eigen::VectorXd::Ones(input.cols());
-
-            return _W * input_bias;
-        }
-
-        virtual Eigen::MatrixXd forward(const Eigen::MatrixXd& input) const override
-        {
-            Eigen::MatrixXd output = compute(input);
-            Eigen::MatrixXd out(4, output.cols());
-            out.row(0) = output.row(0);
-            out.row(1) = output.row(1).array().cos();
-            out.row(2) = output.row(2).array().sin();
-            out.row(3) = output.row(3).array() * output.row(4).array();
-
-            return out;
-        }
-
-        virtual std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> backward(const Eigen::MatrixXd& input, const Eigen::MatrixXd& delta) const override
-        {
-            Eigen::MatrixXd output = compute(input);
-            Eigen::MatrixXd out(5, output.cols());
-            out.row(0) = Eigen::VectorXd::Ones(output.cols());
-            out.row(1) = -output.row(1).array().sin();
-            out.row(2) = output.row(2).array().cos();
-            out.row(3) = output.row(4).array();
-            out.row(4) = output.row(3).array();
-
-            Eigen::MatrixXd dlt = delta;
-            dlt.conservativeResize(dlt.rows() + 1, dlt.cols());
-            dlt.row(dlt.rows() - 1) = dlt.row(dlt.rows() - 2);
-
-            Eigen::MatrixXd tmp = dlt.array() * out.array();
-            return std::make_tuple(_W.transpose() * tmp, tmp);
-        }
-
-    protected:
-        Eigen::MatrixXd _W;
-    };
-
     struct CustomLayer : public Layer {
     public:
         CustomLayer(size_t input) : Layer(input, 0) { _layer_output = 0; }

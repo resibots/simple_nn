@@ -106,8 +106,14 @@ BOOST_AUTO_TEST_CASE(test_gradients_equation)
 
     simple_nn::NeuralNet network;
 
-    network.add_layer<simple_nn::EquationLayer>(5);
-    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(4, 4);
+    auto test_layer = std::make_shared<simple_nn::CustomLayer>(5);
+    test_layer->add_activation<simple_nn::Linear>(1);
+    test_layer->add_activation<simple_nn::Cos>(1);
+    test_layer->add_activation<simple_nn::Sin>(1);
+    test_layer->add_activation<simple_nn::Multiply>(2, 1);
+
+    network.add_layer(test_layer);
+    network.add_layer<simple_nn::FullyConnectedLayer<simple_nn::Tanh>>(test_layer->output(), 4);
 
     int N = 50;
     int fails = 0;
