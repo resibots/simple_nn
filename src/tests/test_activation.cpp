@@ -33,8 +33,6 @@
 
 #include <simple_nn/activation.hpp>
 
-#include <iostream>
-
 // Check gradient via finite differences method
 template <typename Activation>
 std::tuple<double, Eigen::MatrixXd, Eigen::MatrixXd> check_grad(const Eigen::MatrixXd& x, double e = 1e-4)
